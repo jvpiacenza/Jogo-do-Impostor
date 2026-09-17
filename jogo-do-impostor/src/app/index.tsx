@@ -12,7 +12,6 @@ import ResultScreen from '../components/ResultScreen';
 export default function HomeScreen() {
   const [phase, setPhase] = useState('LOBBY');
   
-  // Nomes genéricos padrão editáveis
   const [playerNames, setPlayerNames] = useState([
     'Jogador 1',
     'Jogador 2',
@@ -24,12 +23,10 @@ export default function HomeScreen() {
   const [currentPair, setCurrentPair] = useState<any>(null);
   const [currentIndex, setCurrentIndex] = useState(0);
 
-  // Estados para evitar repetições frequentes
   const [usedWordIndices, setUsedWordIndices] = useState<number[]>([]);
   const [lastImpostorIndex, setLastImpostorIndex] = useState<number | null>(null);
 
   const startGame = () => {
-    // 1. Sorteio da palavra sem repetição até esgotar a lista
     let availableWordIndices = WORD_PAIRS.map((_, i) => i).filter(
       (i) => !usedWordIndices.includes(i)
     );
@@ -44,15 +41,14 @@ export default function HomeScreen() {
     const pair = WORD_PAIRS[randomWordIndex];
     setUsedWordIndices((prev) => [...prev, randomWordIndex]);
 
-    // 2. Sorteio do Impostor (evita repetição direta do mesmo jogador)
+    // Sorteio dinâmico do Impostor de acordo com o tamanho atual da lista
     let impostorIndex: number;
     do {
-      impostorIndex = Math.floor(Math.random() * 4);
-    } while (impostorIndex === lastImpostorIndex && players.length > 0);
+      impostorIndex = Math.floor(Math.random() * playerNames.length);
+    } while (impostorIndex === lastImpostorIndex && playerNames.length > 1);
 
     setLastImpostorIndex(impostorIndex);
 
-    // 3. Montagem da lista de jogadores (com fallback caso o usuário apague um nome)
     const initialPlayers = playerNames.map((name, idx) => ({
       id: idx + 1,
       name: name.trim() || `Jogador ${idx + 1}`,
@@ -67,7 +63,7 @@ export default function HomeScreen() {
   };
 
   const handleNextReveal = () => {
-    if (currentIndex < 3) {
+    if (currentIndex < players.length - 1) {
       setCurrentIndex((prev) => prev + 1);
     } else {
       setCurrentIndex(0);
@@ -76,7 +72,7 @@ export default function HomeScreen() {
   };
 
   const handleNextQuestionTurn = () => {
-    if (currentIndex < 3) {
+    if (currentIndex < players.length - 1) {
       setCurrentIndex((prev) => prev + 1);
     } else {
       setPhase('VOTING');
@@ -107,7 +103,7 @@ export default function HomeScreen() {
         <RevealScreen
           player={players[currentIndex]}
           currentStep={currentIndex + 1}
-          totalSteps={4}
+          totalSteps={players.length}
           onNext={handleNextReveal}
         />
       )}
@@ -115,7 +111,7 @@ export default function HomeScreen() {
         <QuestionsScreen
           player={players[currentIndex]}
           currentTurn={currentIndex + 1}
-          totalTurns={4}
+          totalTurns={players.length}
           onNextTurn={handleNextQuestionTurn}
         />
       )}
